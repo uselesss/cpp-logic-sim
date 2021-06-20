@@ -1,6 +1,8 @@
-#include <iostream>
+#pragma once
 #include <string.h>
 #include <vector>
+#include <string.h>
+#include <bitset>
 
 class Component {
     public:
@@ -118,6 +120,7 @@ class Xor: public Elem2 {
     }
 };
 
+/*
 int main() {
     Xor xor1;
     Xor xor2;
@@ -140,14 +143,8 @@ int main() {
 
     A.set(1);
     B.set(0);
-    C.set(1);
+    C.set(0);
 
-    xor1.eval();
-    xor2.eval();
-    and1.eval();
-    and2.eval();
-    or1.eval();
-
-    std::cout << "Sum: "   << xor2.o0.value << std::endl;
-    std::cout << "Carry: " << or1.o0.value << std::endl;
+    std::cout << "Sum: "   << xor2.o0.value << ", carry: " << or1.o0.value;
 }
+*/
