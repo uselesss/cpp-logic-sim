@@ -1,4 +1,4 @@
-#pragma once
+#include <iostream>
 #include <string.h>
 #include <vector>
 #include <string.h>
@@ -13,7 +13,7 @@ class Component {
 
     std::string name;
 
-    void eval() {}
+    virtual void eval() = 0;
 };
 
 class Connector {
@@ -43,9 +43,10 @@ class Connector {
     void set(bool value) {
         if (this->value == value) return;
         
-        this->value = value; 
-        this->parent->eval();
-        for (Connector* con: connects) {
+        this->value = value;
+        
+        if (this->parent) this->parent->eval();
+        for (Connector* con: this->connects) {
             con->set(value);
         }
     }
@@ -54,22 +55,25 @@ class Connector {
 class Elem1: public Component {
     public: 
     Elem1() {
-        this->i0 = Connector("i0");
-        this->o0 = Connector("o0");
+        this->i0 = new Connector("i0");
+        this->o0 = new Connector("o0");
     }
 
-    Connector i0, o0;
+    Connector *i0, *o0;
+    virtual void eval() = 0;
 };
 
 class Elem2: public Component {
     public: 
     Elem2() {
-        this->i0 = Connector("i0");
-        this->i1 = Connector("i1");
-        this->o0 = Connector("o0");
+        this->i0 = new Connector("i0");
+        this->i1 = new Connector("i1");
+        this->o0 = new Connector("o0");
     }
 
-    Connector i0, i1, o0;
+    Connector *i0, *i1, *o0;
+    virtual void eval() = 0;
+    
 };
 
 class Not: public Elem1 {
@@ -77,34 +81,12 @@ class Not: public Elem1 {
     Not() {}
     Not(std::string name) {
         this->name = name;
+        this->i0->parent = this;
+        this->o0->parent = this;
     }
 
-    void eval() {
-        this->o0.set(!i0.value);
-    }
-};
-
-class And: public Elem2 {
-    public:
-    And() {}
-    And(std::string name) {
-        this->name = name;
-    };
-
-    void eval() {
-        this->o0.set(i0.value && i1.value);
-    }
-};
-
-class Or: public Elem2 {
-    public:
-    Or() {}
-    Or(std::string name) {
-        this->name = name;
-    };
-
-    void eval() {
-        this->o0.set(i0.value || i1.value);
+    virtual void eval() {
+        this->o0->set(!i0->value);
     }
 };
 
@@ -113,42 +95,42 @@ class Xor: public Elem2 {
     Xor() {}
     Xor(std::string name) {
         this->name = name;
+        this->i0->parent = this; 
+        this->i1->parent = this;
+        this->o0->parent = this;
     };
 
     void eval() {
-        this->o0.set(i0.value != i1.value);
+        this->o0->set(i0->value != i1->value);
+    }
+}; 
+
+class And: public Elem2 {
+    public:
+    And() {}
+    And(std::string name) {
+        this->name = name;
+        this->i0->parent = this; 
+        this->i1->parent = this;
+        this->o0->parent = this;
+    };
+
+    virtual void eval() override {
+        this->o0->set(i0->value && i1->value);
     }
 };
 
-// int main() {
-//     Xor xor1;
-//     Xor xor2;
-//     And and1;
-//     And and2;
-//     Or or1;
+class Or: public Elem2 {
+    public:
+    Or() {}
+    Or(std::string name) {
+        this->name = name;
+        this->i0->parent = this; 
+        this->i1->parent = this;
+        this->o0->parent = this;
+    };
 
-//     Connector A;
-//     Connector B;
-//     Connector C;
-    
-//     A.connects = {&xor1.i0, &and2.i0};
-//     B.connects = {&xor1.i1, &and2.i1};
-//     C.connects = {&xor2.i1, &and1.i0};
-
-//     xor1.o0.connects = {&xor2.i0, &and1.i1};
-    
-//     and1.o0.connects = {&or1.i0};
-//     and2.o0.connects = {&or1.i1};
-
-//     A.set(1);
-//     B.set(1);
-//     C.set(1);
-
-//     xor1.eval();
-//     xor2.eval();
-//     and1.eval();
-//     and2.eval();
-//     or1.eval();
-
-//     std::cout << "Sum: "   << xor2.o0.value << ", carry: " << or1.o0.value;
-// }
+    virtual void eval() override {
+        this->o0->set(i0->value || i1->value);
+    }
+};

@@ -154,10 +154,13 @@ int main() {
     B.connect({xor1.i1, and2.i0});
     C.connect({xor2.i1, and1.i0});
     xor1.o0->connect({xor2.i0, and1.i1});
-    
+    and1.o0->connect({or1.i0});
+    and2.o0->connect({or1.i1});
+
     A.set(1);
     B.set(1);
-    C.set(0);
+    C.set(1);
     
-    std::cout << "value:" << xor2.o0->value << std::endl;
+    std::cout << "Sum value:" << xor2.o0->value << std::endl;
+    std::cout << "Carry value:" << or1.o0->value << std::endl;
 }
