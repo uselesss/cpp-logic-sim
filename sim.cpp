@@ -10,9 +10,9 @@ const int SCREEN_HEIGHT = 675;
 
 sf::Font font;
 
-class sfLine : public sf::Drawable {
+class Line : public sf::Drawable {
     public:
-    sfLine(const sf::Vector2f& point1, const sf::Vector2f& point2):
+    Line(const sf::Vector2f& point1, const sf::Vector2f& point2):
         color(sf::Color::Yellow), thickness(5.f)
     {
         sf::Vector2f direction = point2 - point1;
@@ -137,7 +137,7 @@ class Window {
 
     // -------------------
     std::vector<Gate*> gates;
-    short tool = 0;
+    int tool = 0;
 
     // called on setup 
     void setup() {
@@ -175,7 +175,16 @@ class Window {
     // called on mouse release
     void onMouseRelease(sf::Event::MouseButtonEvent buttonEvent) {
         this->mouseDown = false;
-        if(this->selected) this->selected = this->selected->deselect();
+        if(this->selected) {
+            if (this->selected->sprite.getPosition().x > 200) {
+                std::cout << *this->gates.begin() << " " << this->selected << " " << this->gates[0] << " fuck this address -> " << *this->gates.begin() + (this->selected - this->gates[0]) << " vector end " << *this->gates.end() << std::endl;
+                if (this->gates.begin() + (this->selected - this->gates[0]) > this->gates.end()) std::cout << "whyy" << std::endl;
+                else {
+                    this->gates.erase(this->gates.begin() + (this->selected - this->gates[0]));
+                    this->selected = nullptr;
+                }
+            } else this->selected = this->selected->deselect();
+        }
     }
 
     // called every frame
@@ -199,8 +208,18 @@ class Window {
     }
 };
 
+
+void posix_death_signal(int signum)
+{
+	std::cout << "Check your pointers, bitch!" << std::endl;
+    signal(signum, SIG_DFL);
+	exit(3); 
+}
+
 int main()
 {
+    signal(SIGSEGV, posix_death_signal);
+
     Window mainWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Logic gates are cool...");
     return 0;
 }
