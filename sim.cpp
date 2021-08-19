@@ -68,10 +68,6 @@ class Gate {
     std::string name;
     sf::Texture *texture = new sf::Texture;
     sf::Sprite sprite;
-
-    void draw() {
-
-    }
 };
 
 class Window {
@@ -90,6 +86,9 @@ class Window {
                 if (event.type == sf::Event::MouseButtonPressed) {
                     this->onMousePress(event.mouseButton);
                 }
+                if (event.type == sf::Event::MouseButtonReleased) {
+                    this->onMouseRelease(event.mouseButton);
+                }
             }
             this->window->clear(sf::Color(50, 51, 44));  
             this->onUpdate();
@@ -105,34 +104,44 @@ class Window {
         this->run();
     }
 
+    // -------------------
     sf::RenderWindow *window;
+    Gate *selected = nullptr;
+    bool mouseDown = false;
     
-    Gate zxc;
-    Gate zxc1;
-    Gate zxc2;
-    Gate zxc3;
 
-    sf::Vertex line[4] =
-    {
-        sf::Vertex(sf::Vector2f(10.f, 10.f), sf::Color(57, 160, 237)),
-        sf::Vertex(sf::Vector2f(150.f, 150.f), sf::Color(57, 160, 237)),
-        sf::Vertex(sf::Vector2f(150.f, 150.f), sf::Color(57, 160, 237)),
-        sf::Vertex(sf::Vector2f(200.f, 300.f), sf::Color(57, 160, 237)),
-    };
+    // -------------------
+    Gate zxc;
 
     // called on setup 
     void setup() {
         font.loadFromFile("fonts/FiraCode-Bold.ttf");
 
         zxc = Gate("OR", "img/gate.png", 100, 80);
-        zxc1 = Gate("AND", "img/gate.png", 100, 160);
-        zxc2 = Gate("NOT", "img/gate.png", 100, 240);
-        zxc3 = Gate("NAND", "img/gate.png", 100, 320);
     }
 
     // called on mouse press
     void onMousePress(sf::Event::MouseButtonEvent buttonEvent) {
+        sf::Vector2i mousePos = {buttonEvent.x, buttonEvent.y};
+        sf::Mouse::Button button = buttonEvent.button;
+        this->mouseDown = true;
 
+        //Translate mouse position
+        auto translated_pos = this->window->mapPixelToCoords(mousePos); 
+
+        if (zxc.sprite.getGlobalBounds().contains(translated_pos)) {
+            if (!this->selected) {
+                this->selected = &zxc;
+                this->selected->sprite.setColor(sf::Color::Red);
+            } else {
+                this->selected->sprite.setColor(sf::Color::White);
+                this->selected = nullptr;
+            }
+        }
+    }
+
+    void onMouseRelease(sf::Event::MouseButtonEvent buttonEvent) {
+        this->mouseDown = false;
     }
 
     // called every frame
@@ -140,16 +149,15 @@ class Window {
         this->window->draw(this->zxc.sprite);
         this->window->draw(*this->zxc.label);
 
-        this->window->draw(this->zxc1.sprite);
-        this->window->draw(*this->zxc1.label);
-        
-        this->window->draw(this->zxc2.sprite);
-        this->window->draw(*this->zxc2.label);
+        if (this->mouseDown && this->selected) {
+            auto mousePos = sf::Mouse::getPosition();
+            auto translatedPos = this->window->mapPixelToCoords(mousePos);
 
-        this->window->draw(this->zxc3.sprite);
-        this->window->draw(*this->zxc3.label);
+            this->selected->x = translatedPos.x;
+            this->selected->y = translatedPos.y;
+            this->selected->sprite.setPosition(translatedPos.x, translatedPos.y);
+        } 
 
-        this->window->draw(line, 4, sf::Lines);
     }
 
     // called on key press
