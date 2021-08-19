@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <math.h>
+#include <vector>
 #include "logic.h"
 #include "string.h"
 
@@ -41,7 +42,7 @@ class sfLine : public sf::Drawable {
     sf::Color color;
 };
 
-class Gate {
+class Gate : public sf::Drawable {
     public:
     Gate() {}
     Gate(std::string name, std::string imPath, float x, float y) {
@@ -68,6 +69,31 @@ class Gate {
     std::string name;
     sf::Texture *texture = new sf::Texture;
     sf::Sprite sprite;
+
+
+    //TODO rework size & textsize
+    void setPosition(float x, float y) {
+        this->sprite.setPosition(x, y);
+
+        float size = name.length()/5.0;
+        float textSize = name.length() * 12.0;
+        this->label->setPosition(x + (100*size - textSize)/2.0, y+15);
+    }
+
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const {
+        target.draw(this->sprite);
+        target.draw(*this->label);
+    }
+
+    Gate* select() {
+        this->sprite.setColor(sf::Color(57, 160, 237));
+        return this;
+    }
+
+    Gate *deselect() {
+        this->sprite.setColor(sf::Color::White);
+        return nullptr;
+    }
 };
 
 class Window {
@@ -108,16 +134,19 @@ class Window {
     sf::RenderWindow *window;
     Gate *selected = nullptr;
     bool mouseDown = false;
-    
 
     // -------------------
-    Gate zxc;
+    std::vector<Gate*> gates;
+    short tool = 0;
 
     // called on setup 
     void setup() {
         font.loadFromFile("fonts/FiraCode-Bold.ttf");
 
-        zxc = Gate("OR", "img/gate.png", 100, 80);
+        gates.push_back(new Gate("intel core i9", "img/gate.png", 100, 80));
+        gates.push_back(new Gate("and", "img/gate.png", 180, 80));
+        gates.push_back(new Gate("or", "img/gate.png", 200, 80));
+        gates.push_back(new Gate("nand", "img/gate.png", 590, 80));
     }
 
     // called on mouse press
@@ -125,37 +154,40 @@ class Window {
         sf::Vector2i mousePos = {buttonEvent.x, buttonEvent.y};
         sf::Mouse::Button button = buttonEvent.button;
         this->mouseDown = true;
-
         //Translate mouse position
         auto translated_pos = this->window->mapPixelToCoords(mousePos); 
 
-        if (zxc.sprite.getGlobalBounds().contains(translated_pos)) {
-            if (!this->selected) {
-                this->selected = &zxc;
-                this->selected->sprite.setColor(sf::Color::Red);
-            } else {
-                this->selected->sprite.setColor(sf::Color::White);
-                this->selected = nullptr;
+        if (this->tool == 0) {
+            for (int i=0; i<this->gates.size(); ++i) {
+                if (gates[i]->sprite.getGlobalBounds().contains(translated_pos)) {
+                    if (!this->selected) {
+                        this->selected = gates[i]->select();
+                    } else {
+                        this->selected = gates[i]->deselect();
+                    }
+                }
             }
+        } else {
+            this->gates.push_back(new Gate("test", "img/gate.png", translated_pos.x, translated_pos.y));
         }
     }
 
+    // called on mouse release
     void onMouseRelease(sf::Event::MouseButtonEvent buttonEvent) {
         this->mouseDown = false;
+        if(this->selected) this->selected = this->selected->deselect();
     }
 
     // called every frame
     void onUpdate() {
-        this->window->draw(this->zxc.sprite);
-        this->window->draw(*this->zxc.label);
+        for (Gate *gate: gates) this->window->draw(*gate);
 
         if (this->mouseDown && this->selected) {
-            auto mousePos = sf::Mouse::getPosition();
-            auto translatedPos = this->window->mapPixelToCoords(mousePos);
+            auto mousePos = sf::Mouse::getPosition(*this->window);
 
-            this->selected->x = translatedPos.x;
-            this->selected->y = translatedPos.y;
-            this->selected->sprite.setPosition(translatedPos.x, translatedPos.y);
+            this->selected->x = mousePos.x;
+            this->selected->y = mousePos.y;
+            this->selected->setPosition(mousePos.x, mousePos.y);
         } 
 
     }
@@ -163,6 +195,7 @@ class Window {
     // called on key press
     void onKeyPress(int key_code) {
         std::cout << key_code << std::endl;
+        if (key_code > 26) this->tool = key_code - 27;
     }
 };
 
