@@ -143,10 +143,10 @@ class Window {
     void setup() {
         font.loadFromFile("fonts/FiraCode-Bold.ttf");
 
-        gates.push_back(new Gate("intel core i9", "img/gate.png", 100, 80));
-        gates.push_back(new Gate("and", "img/gate.png", 180, 80));
-        gates.push_back(new Gate("or", "img/gate.png", 200, 80));
-        gates.push_back(new Gate("nand", "img/gate.png", 590, 80));
+        this->gates.push_back(new Gate("intel core i9", "img/gate.png", 100, 80));
+        this->gates.push_back(new Gate("and", "img/gate.png", 180, 80));
+        this->gates.push_back(new Gate("or", "img/gate.png", 200, 80));
+        this->gates.push_back(new Gate("nand", "img/gate.png", 590, 80));
     }
 
     // called on mouse press
@@ -177,12 +177,9 @@ class Window {
         this->mouseDown = false;
         if(this->selected) {
             if (this->selected->sprite.getPosition().x > 200) {
-                std::cout << *this->gates.begin() << " " << this->selected << " " << this->gates[0] << " fuck this address -> " << *this->gates.begin() + (this->selected - this->gates[0]) << " vector end " << *this->gates.end() << std::endl;
-                if (this->gates.begin() + (this->selected - this->gates[0]) > this->gates.end()) std::cout << "whyy" << std::endl;
-                else {
-                    this->gates.erase(this->gates.begin() + (this->selected - this->gates[0]));
-                    this->selected = nullptr;
-                }
+                this->gates.erase(std::remove(this->gates.begin(), this->gates.end(), this->selected), this->gates.end());
+                this->selected = nullptr;
+                
             } else this->selected = this->selected->deselect();
         }
     }
