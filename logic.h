@@ -13,7 +13,7 @@ class Component {
 
     std::string name;
 
-    virtual void eval() = 0;
+    virtual void eval() {};
 };
 
 class Connector {
@@ -60,7 +60,7 @@ class Elem1: public Component {
     }
 
     Connector *i0, *o0;
-    virtual void eval() = 0;
+    virtual void eval() {};
 };
 
 class Elem2: public Component {
@@ -72,7 +72,7 @@ class Elem2: public Component {
     }
 
     Connector *i0, *i1, *o0;
-    virtual void eval() = 0;
+    virtual void eval() {};
     
 };
 
@@ -115,7 +115,7 @@ class And: public Elem2 {
         this->o0->parent = this;
     };
 
-    virtual void eval() override {
+    virtual void eval() {
         this->o0->set(i0->value && i1->value);
     }
 };
@@ -130,7 +130,7 @@ class Or: public Elem2 {
         this->o0->parent = this;
     };
 
-    virtual void eval() override {
+    virtual void eval() {
         this->o0->set(i0->value || i1->value);
     }
 };
